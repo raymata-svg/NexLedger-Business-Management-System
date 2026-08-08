@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Add Expense{% endblock %}
+{% block page_title %}Add Expense{% endblock %}
+
+{% block content %}
+<div style="max-width:640px">
+  <div class="section-header fade-up">
+    <div>
+      <div class="section-title">New Expense Entry</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:3px">Record a new outgoing payment</div>
+    </div>
+    <a href="{{ url_for('expenses') }}" class="btn btn-ghost">← Back</a>
+  </div>
+  <div class="card fade-up delay-1">
+    <form method="POST" action="{{ url_for('add_expense') }}">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Vendor</label>
+          <input type="text" name="vendor" placeholder="e.g. Amazon">
+        </div>
+        <div class="form-group">
+          <label>Amount (₦) *</label>
+          <input type="number" name="amount" placeholder="0.00" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category">
+            <option value="">Select category…</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="">Select status…</option>
+          <option value="Paid">Paid</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Optional notes…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <a href="{{ url_for('expenses') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

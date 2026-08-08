@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block page_title %}Expenses{% endblock %}
+
+{% block content %}
+<div class="section-header fade-up">
+  <div>
+    <div class="section-title">Expense Records</div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-top:3px">Track all outgoing payments</div>
+  </div>
+  <a href="{{ url_for('add_expense') }}" class="btn btn-primary">＋ Add Expense</a>
+</div>
+
+<form method="GET" class="card card-sm fade-up delay-1" style="margin-bottom:20px">
+  <div class="search-bar">
+    <input type="text" name="search" placeholder="🔍  Search by vendor or description…" value="{{ search }}">
+    <select name="category">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if category_filter==cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">All Statuses</option>
+      <option value="Paid"    {% if status_filter=='Paid'    %}selected{% endif %}>Paid</option>
+      <option value="Pending" {% if status_filter=='Pending' %}selected{% endif %}>Pending</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    {% if search or category_filter or status_filter %}
+    <a href="{{ url_for('expenses') }}" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="card fade-up delay-2">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Vendor</th><th>Category</th><th>Date</th>
+          <th>Amount</th><th>Status</th><th>Description</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr>
+          <td style="color:var(--muted)">{{ e.id }}</td>
+          <td style="font-weight:500">{{ e.vendor or '—' }}</td>
+          <td><span class="badge badge-blue">{{ e.category or '—' }}</span></td>
+          <td style="color:var(--muted)">{{ e.date or '—' }}</td>
+          <td style="font-weight:700;color:var(--red)">₦{{ "{:,.0f}".format(e.amount) }}</td>
+          <td>
+            {% if e.status == 'Paid' %}<span class="badge badge-green">Paid</span>
+            {% elif e.status == 'Pending' %}<span class="badge badge-amber">Pending</span>
+            {% else %}<span class="badge badge-gray">{{ e.status or '—' }}</span>{% endif %}
+          </td>
+          <td style="color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            {{ e.description or '—' }}
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <a href="{{ url_for('edit_expense', id=e.id) }}" class="btn btn-ghost btn-sm">Edit</a>
+              <form method="POST" action="{{ url_for('delete_expense', id=e.id) }}"
+                    onsubmit="return confirm('Delete this record?')">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+          No expense records found.
+          <a href="{{ url_for('add_expense') }}" style="color:var(--accent)">Add the first one →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if expenses %}
+  <div class="totals-row">
+    <span class="lbl">Total</span>
+    <span style="color:var(--red);font-size:1.1rem">₦{{ "{:,.0f}".format(total) }}</span>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

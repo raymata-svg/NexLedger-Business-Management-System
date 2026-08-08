@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Add Revenue{% endblock %}
+{% block page_title %}Add Revenue{% endblock %}
+
+{% block content %}
+<div style="max-width:640px">
+  <div class="section-header fade-up">
+    <div>
+      <div class="section-title">New Revenue Entry</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:3px">Record a new incoming payment</div>
+    </div>
+    <a href="{{ url_for('revenue') }}" class="btn btn-ghost">← Back</a>
+  </div>
+
+  <div class="card fade-up delay-1">
+    <form method="POST" action="{{ url_for('add_revenue') }}">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" name="title" placeholder="e.g. Website Project" required>
+        </div>
+        <div class="form-group">
+          <label>Amount (₦) *</label>
+          <input type="number" name="amount" placeholder="0.00" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Client</label>
+          <input type="text" name="client" placeholder="Client name">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="">Select status…</option>
+          <option value="Paid">Paid</option>
+          <option value="Pending">Pending</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Optional notes…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <a href="{{ url_for('revenue') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Revenue</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

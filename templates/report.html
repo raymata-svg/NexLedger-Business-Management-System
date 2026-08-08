@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Report{% endblock %}
+{% block page_title %}Financial Report{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="grid-3 fade-up" style="margin-bottom:24px">
+  <div class="stat-card blue">
+    <div class="stat-label">Total Revenue</div>
+    <div class="stat-value">₦{{ "{:,.0f}".format(total_revenue) }}</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-green">Paid ₦{{ "{:,.0f}".format(paid_revenue) }}</span>
+      <span class="badge badge-amber">Pending ₦{{ "{:,.0f}".format(pending_revenue) }}</span>
+    </div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">Total Costs</div>
+    <div class="stat-value">₦{{ "{:,.0f}".format(total_expenses + total_payroll) }}</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-red">Expenses ₦{{ "{:,.0f}".format(total_expenses) }}</span>
+      <span class="badge badge-amber">Payroll ₦{{ "{:,.0f}".format(total_payroll) }}</span>
+    </div>
+  </div>
+  <div class="stat-card {% if net_profit >= 0 %}green{% else %}red{% endif %}">
+    <div class="stat-label">Net Profit</div>
+    <div class="stat-value" style="color:{% if net_profit >= 0 %}var(--green){% else %}var(--red){% endif %}">
+      ₦{{ "{:,.0f}".format(net_profit) }}
+    </div>
+    <div style="margin-top:8px">
+      <span class="badge {% if profit_margin >= 0 %}badge-green{% else %}badge-red{% endif %}">
+        {{ "{:.1f}".format(profit_margin) }}% margin
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Breakdown -->
+<div class="grid-2 fade-up delay-1">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:16px;font-size:0.95rem">Expenses by Category</div>
+    {% if expense_by_category %}
+    <table>
+      <thead><tr><th>Category</th><th>Amount</th><th>Share</th></tr></thead>
+      <tbody>
+        {% for cat, amt in expense_by_category %}
+        <tr>
+          <td><span class="badge badge-blue">{{ cat or 'Other' }}</span></td>
+          <td style="font-weight:600;color:var(--red)">₦{{ "{:,.0f}".format(amt) }}</td>
+          <td style="color:var(--muted)">
+            {% if total_expenses > 0 %}{{ "{:.1f}".format(amt / total_expenses * 100) }}%{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:24px">No expense data yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="margin-bottom:16px;font-size:0.95rem">Payroll by Status</div>
+    {% if payroll_by_status %}
+    <table>
+      <thead><tr><th>Status</th><th>Total Salary</th></tr></thead>
+      <tbody>
+        {% for st, amt in payroll_by_status %}
+        <tr>
+          <td>
+            {% if st == 'Paid' %}<span class="badge badge-green">Paid</span>
+            {% elif st == 'Pending' %}<span class="badge badge-amber">Pending</span>
+            {% else %}<span class="badge badge-gray">{{ st or 'Unknown' }}</span>{% endif %}
+          </td>
+          <td style="font-weight:600;color:var(--amber)">₦{{ "{:,.0f}".format(amt) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:24px">No payroll data yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Financial Summary Table -->
+<div class="card fade-up delay-2" style="margin-top:20px">
+  <div class="section-title" style="margin-bottom:16px;font-size:0.95rem">Financial Summary</div>
+  <table>
+    <thead><tr><th>Item</th><th>Amount</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:500">💰 Total Revenue</td>
+        <td style="font-weight:700;color:var(--green)">₦{{ "{:,.0f}".format(total_revenue) }}</td>
+        <td style="color:var(--muted)">All income collected</td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">🧾 Total Expenses</td>
+        <td style="font-weight:700;color:var(--red)">− ₦{{ "{:,.0f}".format(total_expenses) }}</td>
+        <td style="color:var(--muted)">Operational costs</td>
+      </tr>
+      <tr>
+        <td style="font-weight:500">👥 Total Payroll</td>
+        <td style="font-weight:700;color:var(--red)">− ₦{{ "{:,.0f}".format(total_payroll) }}</td>
+        <td style="color:var(--muted)">Employee salaries</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="totals-row" style="border-top:2px solid var(--border)">
+    <span class="lbl">Net Profit / Loss</span>
+    <span style="color:{% if net_profit >= 0 %}var(--green){% else %}var(--red){% endif %};font-size:1.2rem">
+      ₦{{ "{:,.0f}".format(net_profit) }}
+      ({{ "{:.1f}".format(profit_margin) }}% margin)
+    </span>
+  </div>
+</div>
+{% endblock %}

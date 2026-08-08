@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Add Employee{% endblock %}
+{% block page_title %}Add Employee{% endblock %}
+
+{% block content %}
+<div style="max-width:640px">
+  <div class="section-header fade-up">
+    <div>
+      <div class="section-title">New Payroll Entry</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:3px">Add an employee to payroll</div>
+    </div>
+    <a href="{{ url_for('payroll') }}" class="btn btn-ghost">← Back</a>
+  </div>
+  <div class="card fade-up delay-1">
+    <form method="POST" action="{{ url_for('add_payroll') }}">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Employee Name *</label>
+          <input type="text" name="employee" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label>Role *</label>
+          <input type="text" name="role" placeholder="e.g. Developer" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Salary (₦) *</label>
+          <input type="number" name="salary" placeholder="0.00" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>Payment Date</label>
+          <input type="date" name="payment_date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="">Select status…</option>
+          <option value="Paid">Paid</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" placeholder="Optional notes…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <a href="{{ url_for('payroll') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

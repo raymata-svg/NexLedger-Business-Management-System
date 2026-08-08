@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid-4 fade-up" style="margin-bottom:24px">
+  <div class="stat-card blue delay-1">
+    <div class="stat-icon">💰</div>
+    <div class="stat-label">Total Revenue</div>
+    <div class="stat-value">₦{{ "{:,.0f}".format(total_revenue) }}</div>
+    <div class="stat-sub">{{ revenue_count }} transactions</div>
+  </div>
+  <div class="stat-card red delay-2">
+    <div class="stat-icon">🧾</div>
+    <div class="stat-label">Total Expenses</div>
+    <div class="stat-value">₦{{ "{:,.0f}".format(total_expenses) }}</div>
+    <div class="stat-sub">{{ expense_count }} transactions</div>
+  </div>
+  <div class="stat-card amber delay-3">
+    <div class="stat-icon">👥</div>
+    <div class="stat-label">Payroll</div>
+    <div class="stat-value">₦{{ "{:,.0f}".format(total_payroll) }}</div>
+    <div class="stat-sub">{{ payroll_count }} employees</div>
+  </div>
+  <div class="stat-card {% if net_profit >= 0 %}green{% else %}red{% endif %} delay-4">
+    <div class="stat-icon">{% if net_profit >= 0 %}📈{% else %}📉{% endif %}</div>
+    <div class="stat-label">Net Profit</div>
+    <div class="stat-value" style="color:{% if net_profit >= 0 %}var(--green){% else %}var(--red){% endif %}">
+      ₦{{ "{:,.0f}".format(net_profit) }}
+    </div>
+    <div class="stat-sub">Revenue minus all costs</div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card fade-up delay-1">
+    <div class="section-header" style="margin-bottom:16px">
+      <div class="section-title" style="font-size:0.95rem">Revenue vs Expenses</div>
+      <span style="font-size:0.72rem;color:var(--muted)">Monthly</span>
+    </div>
+    <canvas id="lineChart" height="200"></canvas>
+  </div>
+  <div class="card fade-up delay-2">
+    <div class="section-header" style="margin-bottom:16px">
+      <div class="section-title" style="font-size:0.95rem">Expenses by Category</div>
+    </div>
+    <canvas id="doughnutChart" height="200"></canvas>
+  </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="grid-2">
+  <div class="card fade-up delay-3">
+    <div class="section-header">
+      <div class="section-title" style="font-size:0.95rem">Recent Revenue</div>
+      <a href="{{ url_for('revenue') }}" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Client</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for r in recent_revenues %}
+          <tr>
+            <td>{{ r.title }}</td>
+            <td style="color:var(--muted)">{{ r.client or '—' }}</td>
+            <td style="font-weight:600;color:var(--green)">₦{{ "{:,.0f}".format(r.amount) }}</td>
+            <td>
+              {% if r.status == 'Paid' %}<span class="badge badge-green">Paid</span>
+              {% elif r.status == 'Pending' %}<span class="badge badge-amber">Pending</span>
+              {% elif r.status == 'Overdue' %}<span class="badge badge-red">Overdue</span>
+              {% else %}<span class="badge badge-gray">{{ r.status or '—' }}</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:24px">No revenue yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card fade-up delay-4">
+    <div class="section-header">
+      <div class="section-title" style="font-size:0.95rem">Recent Expenses</div>
+      <a href="{{ url_for('expenses') }}" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Vendor</th><th>Category</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for e in recent_expenses %}
+          <tr>
+            <td>{{ e.vendor or '—' }}</td>
+            <td style="color:var(--muted)">{{ e.category or '—' }}</td>
+            <td style="font-weight:600;color:var(--red)">₦{{ "{:,.0f}".format(e.amount) }}</td>
+            <td>
+              {% if e.status == 'Paid' %}<span class="badge badge-green">Paid</span>
+              {% elif e.status == 'Pending' %}<span class="badge badge-amber">Pending</span>
+              {% else %}<span class="badge badge-gray">{{ e.status or '—' }}</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:24px">No expenses yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const monthlyRevenue  = {{ monthly_revenue | safe }};
+const monthlyExpenses = {{ monthly_expenses | safe }};
+const expenseCats     = {{ expense_categories | safe }};
+
+// Merge & sort all months
+const allMonths = [...new Set([...Object.keys(monthlyRevenue), ...Object.keys(monthlyExpenses)])].sort();
+
+const chartDefaults = {
+  font: { family: "'DM Sans', sans-serif" },
+  color: '#64748b',
+};
+Chart.defaults.font.family = chartDefaults.font.family;
+Chart.defaults.color = chartDefaults.color;
+
+// Line chart
+new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: {
+    labels: allMonths.length ? allMonths : ['No data'],
+    datasets: [
+      {
+        label: 'Revenue',
+        data: allMonths.map(m => monthlyRevenue[m] || 0),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4,
+      },
+      {
+        label: 'Expenses',
+        data: allMonths.map(m => monthlyExpenses[m] || 0),
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239,68,68,0.06)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#ef4444',
+        pointRadius: 4,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      x: { grid: { color: 'rgba(30,42,66,0.8)' } },
+      y: { grid: { color: 'rgba(30,42,66,0.8)' }, ticks: { callback: v => '₦' + v.toLocaleString() } },
+    },
+  },
+});
+
+// Doughnut chart
+const catLabels = Object.keys(expenseCats);
+const catValues = Object.values(expenseCats);
+const palette = ['#3b82f6','#06b6d4','#22c55e','#f59e0b','#ef4444','#a855f7','#64748b'];
+new Chart(document.getElementById('doughnutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: catLabels.length ? catLabels : ['No data'],
+    datasets: [{
+      data: catValues.length ? catValues : [1],
+      backgroundColor: palette.slice(0, catLabels.length || 1),
+      borderColor: '#0e1420',
+      borderWidth: 3,
+    }],
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right' },
+      tooltip: { callbacks: { label: ctx => ' ₦' + ctx.parsed.toLocaleString() } },
+    },
+    cutout: '65%',
+  },
+});
+</script>
+{% endblock %}
